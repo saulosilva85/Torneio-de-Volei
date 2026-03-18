@@ -11,6 +11,34 @@ cabecas_input = st.text_area("Digite um nome por linha", height=120)
 st.markdown("### Demais Jogadores")
 jogadores_input = st.text_area("Digite um nome por linha", height=200)
 
+
+# 🔎 Função simples de detecção de gênero
+def detectar_genero(nome):
+    nome = nome.lower().strip()
+
+    if nome.endswith("a"):
+        return "F"
+    elif nome.endswith(("o", "r", "l")):
+        return "M"
+    else:
+        return random.choice(["M", "F"])
+
+
+# 🔎 Separar por gênero
+def separar_generos(lista):
+    homens = []
+    mulheres = []
+
+    for nome in lista:
+        genero = detectar_genero(nome)
+        if genero == "M":
+            homens.append(nome)
+        else:
+            mulheres.append(nome)
+
+    return homens, mulheres
+
+
 if st.button("🎲 Sortear Times"):
     cabecas = [c.strip() for c in cabecas_input.split("\n") if c.strip()]
     jogadores = [j.strip() for j in jogadores_input.split("\n") if j.strip()]
@@ -21,17 +49,35 @@ if st.button("🎲 Sortear Times"):
     else:
         num_times = len(cabecas)
 
-        # Criar times com cabeças de chave
-        times = {f"Time {i+1}": [cabecas[i]] for i in range(num_times)}
+        # Separar todos por gênero
+        cab_h, cab_m = separar_generos(cabecas)
+        jog_h, jog_m = separar_generos(jogadores)
 
-        random.shuffle(jogadores)
+        # Criar times
+        times = {f"Time {i+1}": [] for i in range(num_times)}
 
-        # Distribuir jogadores
-        for i, jogador in enumerate(jogadores):
+        # 🔥 Distribuir cabeças de chave alternando gênero
+        cabecas_mix = cab_h + cab_m
+        random.shuffle(cabecas_mix)
+
+        for i in range(num_times):
+            times[f"Time {i+1}"].append(cabecas_mix[i])
+
+        # Embaralhar jogadores
+        random.shuffle(jog_h)
+        random.shuffle(jog_m)
+
+        # ⚖️ Distribuir homens equilibradamente
+        for i, jogador in enumerate(jog_h):
             time = f"Time {(i % num_times) + 1}"
             times[time].append(jogador)
 
-        st.success("Sorteio realizado!")
+        # ⚖️ Distribuir mulheres equilibradamente
+        for i, jogador in enumerate(jog_m):
+            time = f"Time {(i % num_times) + 1}"
+            times[time].append(jogador)
+
+        st.success("Sorteio realizado com balanceamento!")
 
         # Exibir resultado
         for time, integrantes in times.items():
