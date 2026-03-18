@@ -35,6 +35,6 @@ if st.button("🎲 Sortear Times"):
 
         # Exibir resultado
         for time, integrantes in times.items():
-            st.markdown(f"## 🏆 {time}")
+            st.markdown(f"# 🏆 {time}")
             for jogador in integrantes:
                 st.write(f"• {jogador}")
