@@ -12,7 +12,7 @@ st.markdown("### Demais Jogadores")
 jogadores_input = st.text_area("Digite um nome por linha", height=200)
 
 
-# 🔎 Detecção de gênero (agora com suporte a "?")
+# 🔎 Detecção de gênero (com suporte a "?")
 def detectar_genero(nome):
     nome = nome.lower().strip()
 
@@ -65,47 +65,48 @@ if st.button("🎲 Sortear Times"):
     cab_h, cab_m = separar_generos(cabecas)
     jog_h, jog_m = separar_generos(jogadores)
 
-    todas_mulheres = cab_m + jog_m
-
-    # 🚨 REGRA PRINCIPAL
-    if len(todas_mulheres) != num_times:
-        st.error(f"Deve haver exatamente {num_times} mulheres (1 por time).")
-        st.stop()
+    mulheres = cab_m + jog_m
+    homens = cab_h + jog_h
 
     # Criar times
     times = {f"Time {i+1}": [] for i in range(num_times)}
 
-    # 🔥 PASSO 1 — distribuir 1 mulher por time
-    random.shuffle(todas_mulheres)
+    # 🔥 PASSO 1 — distribuir mulheres (1 por time se possível)
+    random.shuffle(mulheres)
 
-    for i in range(num_times):
-        times[f"Time {i+1}"].append(todas_mulheres[i])
+    for i, mulher in enumerate(mulheres):
+        time = f"Time {(i % num_times) + 1}"
+        if len(times[time]) < 4:
+            times[time].append(mulher)
 
-    # 🔥 PASSO 2 — adicionar cabeças de chave (sem repetir mulheres)
-    cabecas_restantes = [c for c in cabecas if c not in todas_mulheres]
+    # 🔥 PASSO 2 — adicionar cabeças de chave (evitar duplicar)
+    cabecas_restantes = [c for c in cabecas if c not in mulheres]
 
     random.shuffle(cabecas_restantes)
 
-    for i in range(num_times):
-        if len(times[f"Time {i+1}"]) < 4:
-            times[f"Time {i+1}"].append(cabecas_restantes[i])
+    for i, jogador in enumerate(cabecas_restantes):
+        time = f"Time {(i % num_times) + 1}"
+        if len(times[time]) < 4:
+            times[time].append(jogador)
 
-    # 🔥 PASSO 3 — completar com os demais jogadores
-    restantes = [j for j in jogadores if j not in todas_mulheres]
+    # 🔥 PASSO 3 — completar com restantes
+    restantes = [j for j in jogadores if j not in mulheres]
 
     random.shuffle(restantes)
 
     i = 0
     for jogador in restantes:
-        while True:
+        tentativas = 0
+        while tentativas < num_times:
             time = f"Time {(i % num_times) + 1}"
             if len(times[time]) < 4:
                 times[time].append(jogador)
                 i += 1
                 break
             i += 1
+            tentativas += 1
 
-    st.success("Sorteio realizado com 1 mulher por time!")
+    st.success("Sorteio realizado com balanceamento inteligente!")
 
     # Exibir resultado
     for time, integrantes in times.items():
