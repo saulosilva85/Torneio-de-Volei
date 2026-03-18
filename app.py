@@ -43,44 +43,63 @@ if st.button("🎲 Sortear Times"):
     cabecas = [c.strip() for c in cabecas_input.split("\n") if c.strip()]
     jogadores = [j.strip() for j in jogadores_input.split("\n") if j.strip()]
 
-    # Validação
+    # Validação cabeças
     if len(cabecas) < 2 or len(cabecas) > 6:
         st.error("Você deve inserir entre 2 e 6 cabeças de chave.")
-    else:
-        num_times = len(cabecas)
+        st.stop()
 
-        # Separar todos por gênero
-        cab_h, cab_m = separar_generos(cabecas)
-        jog_h, jog_m = separar_generos(jogadores)
+    num_times = len(cabecas)
 
-        # Criar times
-        times = {f"Time {i+1}": [] for i in range(num_times)}
+    # 🔥 Validação TOTAL de jogadores
+    total_necessario = num_times * 4
+    total_atual = len(cabecas) + len(jogadores)
 
-        # 🔥 Distribuir cabeças de chave alternando gênero
-        cabecas_mix = cab_h + cab_m
-        random.shuffle(cabecas_mix)
+    if total_atual != total_necessario:
+        st.error(f"Você precisa de exatamente {total_necessario} jogadores no total.")
+        st.warning(f"Atualmente você tem {total_atual}. Faltam {total_necessario - total_atual}.")
+        st.stop()
 
-        for i in range(num_times):
-            times[f"Time {i+1}"].append(cabecas_mix[i])
+    # Separar por gênero
+    cab_h, cab_m = separar_generos(cabecas)
+    jog_h, jog_m = separar_generos(jogadores)
 
-        # Embaralhar jogadores
-        random.shuffle(jog_h)
-        random.shuffle(jog_m)
+    # Criar times
+    times = {f"Time {i+1}": [] for i in range(num_times)}
 
-        # ⚖️ Distribuir homens equilibradamente
-        for i, jogador in enumerate(jog_h):
-            time = f"Time {(i % num_times) + 1}"
-            times[time].append(jogador)
+    # Distribuir cabeças de chave
+    cabecas_mix = cab_h + cab_m
+    random.shuffle(cabecas_mix)
 
-        # ⚖️ Distribuir mulheres equilibradamente
-        for i, jogador in enumerate(jog_m):
-            time = f"Time {(i % num_times) + 1}"
-            times[time].append(jogador)
+    for i in range(num_times):
+        times[f"Time {i+1}"].append(cabecas_mix[i])
 
-        st.success("Sorteio realizado com balanceamento!")
+    # Embaralhar jogadores
+    random.shuffle(jog_h)
+    random.shuffle(jog_m)
 
-        # Exibir resultado
-        for time, integrantes in times.items():
-            st.markdown(f"# 🏆 {time}")
-            for jogador in integrantes:
-                st.write(f"• {jogador}")
+    # 🔥 Distribuição controlada (máx 4 por time)
+    def adicionar_jogadores(lista):
+        i = 0
+        for jogador in lista:
+            tentativas = 0
+            while tentativas < num_times:
+                time = f"Time {(i % num_times) + 1}"
+
+                if len(times[time]) < 4:
+                    times[time].append(jogador)
+                    i += 1
+                    break
+
+                i += 1
+                tentativas += 1
+
+    adicionar_jogadores(jog_h)
+    adicionar_jogadores(jog_m)
+
+    st.success("Sorteio realizado com balanceamento e times completos!")
+
+    # Exibir resultado
+    for time, integrantes in times.items():
+        st.markdown(f"# 🏆 {time} ({len(integrantes)}/4)")
+        for jogador in integrantes:
+            st.write(f"• {jogador}")
