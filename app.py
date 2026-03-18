@@ -5,7 +5,7 @@ st.set_page_config(page_title="Sorteio de Times", layout="centered")
 
 st.title("🏐 Torneio de Vôlei")
 
-st.markdown("### Cabeças de Chave (2 a 6 jogadores)")
+st.markdown("### Cabeças de Chave (Inserir de 2 a 6 jogadores)")
 cabecas_input = st.text_area("Digite um nome por linha", height=120)
 
 st.markdown("### Demais Jogadores")
