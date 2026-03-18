@@ -12,7 +12,7 @@ st.markdown("### Demais Jogadores")
 jogadores_input = st.text_area("Digite um nome por linha", height=200)
 
 
-# 🔎 Função simples de detecção de gênero
+# 🔎 Detecção simples (mantida)
 def detectar_genero(nome):
     nome = nome.lower().strip()
 
@@ -22,21 +22,6 @@ def detectar_genero(nome):
         return "M"
     else:
         return random.choice(["M", "F"])
-
-
-# 🔎 Separar por gênero
-def separar_generos(lista):
-    homens = []
-    mulheres = []
-
-    for nome in lista:
-        genero = detectar_genero(nome)
-        if genero == "M":
-            homens.append(nome)
-        else:
-            mulheres.append(nome)
-
-    return homens, mulheres
 
 
 if st.button("🎲 Sortear Times"):
@@ -50,53 +35,70 @@ if st.button("🎲 Sortear Times"):
 
     num_times = len(cabecas)
 
-    # 🔥 Validação TOTAL de jogadores
+    # Validação total jogadores
     total_necessario = num_times * 4
     total_atual = len(cabecas) + len(jogadores)
 
     if total_atual != total_necessario:
         st.error(f"Você precisa de exatamente {total_necessario} jogadores no total.")
-        st.warning(f"Atualmente você tem {total_atual}. Faltam {total_necessario - total_atual}.")
         st.stop()
 
-    # Separar por gênero
-    cab_h, cab_m = separar_generos(cabecas)
-    jog_h, jog_m = separar_generos(jogadores)
+    # Separar todos
+    todos = cabecas + jogadores
 
-    # Criar times
-    times = {f"Time {i+1}": [] for i in range(num_times)}
+    mulheres = [n for n in todos if detectar_genero(n) == "F"]
+    homens = [n for n in todos if detectar_genero(n) == "M"]
 
-    # Distribuir cabeças de chave
-    cabecas_mix = cab_h + cab_m
-    random.shuffle(cabecas_mix)
+    # 🚨 REGRA: precisa ter pelo menos 1 mulher por time
+    if len(mulheres) < num_times:
+        st.error(f"É necessário pelo menos {num_times} mulheres (1 por time).")
+        st.stop()
+
+    # Criar times com cabeça fixa
+    times = {f"Time {i+1}": [cabecas[i]] for i in range(num_times)}
+
+    # 🔥 PASSO 1 — garantir 1 mulher por time
+    mulheres_disponiveis = mulheres.copy()
+
+    # Se cabeça já for mulher, conta
+    for i in range(num_times):
+        time = f"Time {i+1}"
+        cabeca = cabecas[i]
+
+        if detectar_genero(cabeca) == "F":
+            mulheres_disponiveis.remove(cabeca)
+
+    random.shuffle(mulheres_disponiveis)
 
     for i in range(num_times):
-        times[f"Time {i+1}"].append(cabecas_mix[i])
+        time = f"Time {i+1}"
+        cabeca = cabecas[i]
 
-    # Embaralhar jogadores
-    random.shuffle(jog_h)
-    random.shuffle(jog_m)
+        # Se cabeça NÃO for mulher → adiciona uma
+        if detectar_genero(cabeca) != "F":
+            times[time].append(mulheres_disponiveis.pop())
 
-    # 🔥 Distribuição controlada (máx 4 por time)
-    def adicionar_jogadores(lista):
-        i = 0
-        for jogador in lista:
-            tentativas = 0
-            while tentativas < num_times:
-                time = f"Time {(i % num_times) + 1}"
+    # 🔥 PASSO 2 — completar com restantes
+    usados = set(sum(times.values(), []))
+    restantes = [j for j in todos if j not in usados]
 
-                if len(times[time]) < 4:
-                    times[time].append(jogador)
-                    i += 1
-                    break
+    random.shuffle(restantes)
 
+    i = 0
+    for jogador in restantes:
+        tentativas = 0
+        while tentativas < num_times:
+            time = f"Time {(i % num_times) + 1}"
+
+            if len(times[time]) < 4:
+                times[time].append(jogador)
                 i += 1
-                tentativas += 1
+                break
 
-    adicionar_jogadores(jog_h)
-    adicionar_jogadores(jog_m)
+            i += 1
+            tentativas += 1
 
-    st.success("Sorteio realizado!")
+    st.success("Sorteio realizado com 1 mulher por time e cabeça fixa!")
 
     # Exibir resultado
     for time, integrantes in times.items():
