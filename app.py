@@ -56,47 +56,57 @@ if st.button("🎲 Sortear Times"):
 
     if total_atual != total_necessario:
         st.error(f"Você precisa de exatamente {total_necessario} jogadores no total.")
-        st.warning(f"Atualmente você tem {total_atual}. Faltam {total_necessario - total_atual}.")
         st.stop()
 
     # Separar por gênero
     cab_h, cab_m = separar_generos(cabecas)
     jog_h, jog_m = separar_generos(jogadores)
 
+    mulheres = cab_m + jog_m
+    homens = cab_h + jog_h
+
+    # 🚨 REGRA OBRIGATÓRIA
+    if len(mulheres) != num_times:
+        st.error(f"É obrigatório ter exatamente {num_times} mulheres (1 por time).")
+        st.stop()
+
     # Criar times
     times = {f"Time {i+1}": [] for i in range(num_times)}
 
-    # Distribuir cabeças de chave
-    cabecas_mix = cab_h + cab_m
-    random.shuffle(cabecas_mix)
+    # 🔥 PASSO 1 — 1 mulher por time (GARANTIDO)
+    random.shuffle(mulheres)
 
     for i in range(num_times):
-        times[f"Time {i+1}"].append(cabecas_mix[i])
+        times[f"Time {i+1}"].append(mulheres[i])
 
-    # Embaralhar jogadores
-    random.shuffle(jog_h)
-    random.shuffle(jog_m)
+    # 🔥 PASSO 2 — adicionar cabeças de chave restantes
+    cabecas_restantes = [c for c in cabecas if c not in mulheres]
+    random.shuffle(cabecas_restantes)
 
-    # 🔥 Distribuição controlada (máx 4 por time)
-    def adicionar_jogadores(lista):
-        i = 0
-        for jogador in lista:
-            tentativas = 0
-            while tentativas < num_times:
-                time = f"Time {(i % num_times) + 1}"
+    for i, jogador in enumerate(cabecas_restantes):
+        time = f"Time {(i % num_times) + 1}"
+        if len(times[time]) < 4:
+            times[time].append(jogador)
 
-                if len(times[time]) < 4:
-                    times[time].append(jogador)
-                    i += 1
-                    break
+    # 🔥 PASSO 3 — completar com demais jogadores
+    restantes = [j for j in jogadores if j not in mulheres]
+    random.shuffle(restantes)
 
+    i = 0
+    for jogador in restantes:
+        tentativas = 0
+        while tentativas < num_times:
+            time = f"Time {(i % num_times) + 1}"
+
+            if len(times[time]) < 4:
+                times[time].append(jogador)
                 i += 1
-                tentativas += 1
+                break
 
-    adicionar_jogadores(jog_h)
-    adicionar_jogadores(jog_m)
+            i += 1
+            tentativas += 1
 
-    st.success("Sorteio realizado!")
+    st.success("Sorteio realizado com 1 mulher por time!")
 
     # Exibir resultado
     for time, integrantes in times.items():
