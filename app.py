@@ -12,31 +12,50 @@ st.markdown("### Demais Jogadores")
 jogadores_input = st.text_area("Digite um nome por linha", height=200)
 
 
-# 🔎 Função simples de detecção de gênero
+# 🔎 Detecção MELHORADA
 def detectar_genero(nome):
     nome = nome.lower().strip()
+    primeiro_nome = nome.split()[0]
+
+    # 🔥 Base grande de nomes femininos (Brasil)
+    nomes_femininos = {
+        "maria","ana","julia","fernanda","patricia","camila","beatriz",
+        "larissa","amanda","juliana","carla","paula","mariana","aline",
+        "bruna","renata","leticia","sabrina","bianca","priscila","simone",
+        "elaine","cristina","raquel","daniela","monica","luana","caroline",
+        "karina","tatiane","fabiana","rosana","claudia","viviane","sheila",
+        "sandra","andreia","debora","erika","flavia","gisele","helena",
+        "isabela","joana","katia","luciana","michelle","natalia","olivia",
+        "pamela","regina","silvia","tania","valeria","yasmin","luiza",
+        "eduarda","gabriela","rafaela","milena","nicole","laura","alice",
+        "manuela","heloisa","cecília","clarice","lorena","marcela","samara",
+        "talita","vanessa","yara","zilda","bia","Re"
+    }
+
+    # 🔥 Regra forte: prioridade total
+    if primeiro_nome in nomes_femininos:
+        return "F"
+
+    # 🔥 Heurística forte (Brasil)
+    if nome.endswith(("a", "e")):
+        return "F"
+
+    if nome.endswith(("o", "r", "l", "s", "m")):
+        return "M"
+
+    # fallback seguro
+    return "M"
+
+    if primeiro_nome in nomes_femininos:
+        return "F"
 
     if nome.endswith("a"):
         return "F"
-    elif nome.endswith(("o", "r", "l")):
+
+    if nome.endswith(("o", "r", "l")):
         return "M"
-    else:
-        return random.choice(["M", "F"])
 
-
-# 🔎 Separar por gênero
-def separar_generos(lista):
-    homens = []
-    mulheres = []
-
-    for nome in lista:
-        genero = detectar_genero(nome)
-        if genero == "M":
-            homens.append(nome)
-        else:
-            mulheres.append(nome)
-
-    return homens, mulheres
+    return "M"  # fallback seguro
 
 
 if st.button("🎲 Sortear Times"):
@@ -50,53 +69,76 @@ if st.button("🎲 Sortear Times"):
 
     num_times = len(cabecas)
 
-    # 🔥 Validação TOTAL de jogadores
+    # 🔥 Validação total jogadores
     total_necessario = num_times * 4
     total_atual = len(cabecas) + len(jogadores)
 
     if total_atual != total_necessario:
         st.error(f"Você precisa de exatamente {total_necessario} jogadores no total.")
-        st.warning(f"Atualmente você tem {total_atual}. Faltam {total_necessario - total_atual}.")
         st.stop()
 
-    # Separar por gênero
-    cab_h, cab_m = separar_generos(cabecas)
-    jog_h, jog_m = separar_generos(jogadores)
+    # 🔥 Separar todos
+    todos = cabecas + jogadores
 
-    # Criar times
-    times = {f"Time {i+1}": [] for i in range(num_times)}
+    mulheres = [n for n in todos if detectar_genero(n) == "F"]
+    homens = [n for n in todos if detectar_genero(n) == "M"]
 
-    # Distribuir cabeças de chave
-    cabecas_mix = cab_h + cab_m
-    random.shuffle(cabecas_mix)
+    # 🚨 REGRA OBRIGATÓRIA
+    if len(mulheres) < num_times:
+        st.error(f"É necessário pelo menos {num_times} mulheres para garantir 1 por time.")
+        st.stop()
+
+    # Criar times com cabeça fixa
+    times = {f"Time {i+1}": [cabecas[i]] for i in range(num_times)}
+
+    # 🔥 PASSO 1 — garantir 1 mulher por time (sem remover cabeça)
+    mulheres_disponiveis = [m for m in mulheres if m not in cabecas]
+
+    # Se alguma cabeça já for mulher, conta ela
+    mulheres_por_time = {}
 
     for i in range(num_times):
-        times[f"Time {i+1}"].append(cabecas_mix[i])
+        time = f"Time {i+1}"
+        cabeca = cabecas[i]
 
-    # Embaralhar jogadores
-    random.shuffle(jog_h)
-    random.shuffle(jog_m)
+        if detectar_genero(cabeca) == "F":
+            mulheres_por_time[time] = 1
+        else:
+            mulheres_por_time[time] = 0
 
-    # 🔥 Distribuição controlada (máx 4 por time)
-    def adicionar_jogadores(lista):
-        i = 0
-        for jogador in lista:
-            tentativas = 0
-            while tentativas < num_times:
-                time = f"Time {(i % num_times) + 1}"
+    random.shuffle(mulheres_disponiveis)
 
-                if len(times[time]) < 4:
-                    times[time].append(jogador)
-                    i += 1
-                    break
+    for i in range(num_times):
+        time = f"Time {i+1}"
 
+        if mulheres_por_time[time] == 0:
+            if not mulheres_disponiveis:
+                st.error("Erro: não há mulheres suficientes para distribuir.")
+                st.stop()
+
+            times[time].append(mulheres_disponiveis.pop())
+
+    # 🔥 PASSO 2 — adicionar restantes (sem duplicar)
+    usados = set(sum(times.values(), []))
+
+    restantes = [j for j in todos if j not in usados]
+    random.shuffle(restantes)
+
+    i = 0
+    for jogador in restantes:
+        tentativas = 0
+        while tentativas < num_times:
+            time = f"Time {(i % num_times) + 1}"
+
+            if len(times[time]) < 4:
+                times[time].append(jogador)
                 i += 1
-                tentativas += 1
+                break
 
-    adicionar_jogadores(jog_h)
-    adicionar_jogadores(jog_m)
+            i += 1
+            tentativas += 1
 
-    st.success("Sorteio realizado!")
+    st.success("Sorteio realizado com 1 mulher por time e cabeça fixa!")
 
     # Exibir resultado
     for time, integrantes in times.items():
