@@ -98,7 +98,7 @@ if st.button("🎲 Sortear Times"):
             i += 1
             tentativas += 1
 
-    st.success("Sorteio realizado com 1 mulher por time e cabeça fixa!")
+    st.success("Sorteio realizado!")
 
     # Exibir resultado
     for time, integrantes in times.items():
