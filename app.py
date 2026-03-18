@@ -15,13 +15,28 @@ jogadores_input = st.text_area("Digite um nome por linha", height=200)
 # 🔎 Função simples de detecção de gênero
 def detectar_genero(nome):
     nome = nome.lower().strip()
+    primeiro_nome = nome.split()[0]
 
+    # PRIORIDADE: ?
+    if "?" in nome:
+        return "F"
+
+    # Base de nomes femininos comuns
+    nomes_femininos = {
+        "maria","ana","julia","fernanda","patricia","camila",
+        "beatriz","larissa","amanda","juliana","carla","Rê"
+    }
+
+    if primeiro_nome in nomes_femininos:
+        return "F"
+
+    # Heurística
     if nome.endswith("a"):
         return "F"
     elif nome.endswith(("o", "r", "l")):
         return "M"
     else:
-        return random.choice(["M", "F"])
+        return "M"  # fallback mais seguro
 
 
 # 🔎 Separar por gênero
