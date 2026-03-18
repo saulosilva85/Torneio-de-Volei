@@ -21,7 +21,7 @@ def detectar_genero(nome):
     elif nome.endswith(("o", "r", "l")):
         return "M"
     else:
-        return random.choice(["M", "F"])
+        return "M"  # fallback seguro
 
 
 if st.button("🎲 Sortear Times"):
@@ -47,23 +47,23 @@ if st.button("🎲 Sortear Times"):
     todos = cabecas + jogadores
 
     mulheres = [n for n in todos if detectar_genero(n) == "F"]
+    homens = [n for n in todos if detectar_genero(n) == "M"]
 
-    # 🚨 REGRA: precisa de pelo menos 1 mulher por time
+    # 🚨 REGRA OBRIGATÓRIA
     if len(mulheres) < num_times:
-        st.error(f"É necessário pelo menos {num_times} mulheres (1 por time).")
+        st.error(f"É obrigatório ter pelo menos {num_times} mulheres (1 por time).")
         st.stop()
 
     # 🔥 Criar times com cabeça fixa
     times = {f"Time {i+1}": [cabecas[i]] for i in range(num_times)}
 
-    # 🔥 PASSO 1 — distribuir mulheres corretamente
+    # 🔥 PASSO 1 — garantir 1 mulher por time
     mulheres_disponiveis = mulheres.copy()
 
-    # remover cabeças femininas da lista (com segurança)
+    # remover mulheres que já são cabeça de chave
     for cabeca in cabecas:
-        if detectar_genero(cabeca) == "F":
-            if cabeca in mulheres_disponiveis:
-                mulheres_disponiveis.remove(cabeca)
+        if detectar_genero(cabeca) == "F" and cabeca in mulheres_disponiveis:
+            mulheres_disponiveis.remove(cabeca)
 
     random.shuffle(mulheres_disponiveis)
 
@@ -71,9 +71,13 @@ if st.button("🎲 Sortear Times"):
         time = f"Time {i+1}"
         cabeca = cabecas[i]
 
-        # se cabeça NÃO for mulher → adicionar uma
-        if detectar_genero(cabeca) != "F":
-            times[time].append(mulheres_disponiveis.pop())
+        # se cabeça já for mulher → OK
+        if detectar_genero(cabeca) == "F":
+            continue
+
+        # adicionar mulher garantida
+        mulher = mulheres_disponiveis.pop(0)
+        times[time].append(mulher)
 
     # 🔥 PASSO 2 — completar times
     usados = set(sum(times.values(), []))
@@ -81,21 +85,14 @@ if st.button("🎲 Sortear Times"):
 
     random.shuffle(restantes)
 
-    i = 0
     for jogador in restantes:
-        tentativas = 0
-        while tentativas < num_times:
-            time = f"Time {(i % num_times) + 1}"
-
+        for i in range(num_times):
+            time = f"Time {i+1}"
             if len(times[time]) < 4:
                 times[time].append(jogador)
-                i += 1
                 break
 
-            i += 1
-            tentativas += 1
-
-    st.success("Sorteio realizado com sucesso!")
+    st.success("Sorteio realizado com 1 mulher garantida por time!")
 
     # 📊 Exibir resultado
     for time, integrantes in times.items():
