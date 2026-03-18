@@ -3,7 +3,7 @@ import random
 
 st.set_page_config(page_title="Sorteio de Times", layout="centered")
 
-st.title("🏐 Torneio de Vôlei")
+st.title("🏐 Vôlei, Churrasco, Cerveja e Água")
 
 st.markdown("### Cabeças de Chave (Inserir de 2 a 6 jogadores)")
 cabecas_input = st.text_area("Digite um nome por linha", height=120)
@@ -96,7 +96,7 @@ if st.button("🎲 Sortear Times"):
     adicionar_jogadores(jog_h)
     adicionar_jogadores(jog_m)
 
-    st.success("Sorteio realizado com balanceamento e times completos!")
+    st.success("Sorteio realizado!")
 
     # Exibir resultado
     for time, integrantes in times.items():
