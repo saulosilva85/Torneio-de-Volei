@@ -3,7 +3,7 @@ import random
 
 st.set_page_config(page_title="Sorteio de Times", layout="centered")
 
-st.title("🏐 Vôlei, Churrasco, Cerveja e Água!")
+st.title("🏐 Torneio de Vôlei")
 
 st.markdown("### Cabeças de Chave (Inserir de 2 a 6 jogadores)")
 cabecas_input = st.text_area("Digite um nome por linha", height=120)
