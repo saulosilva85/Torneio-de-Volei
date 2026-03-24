@@ -8,16 +8,15 @@ st.title("🏐 Open Village 18+ 🏐")
 st.markdown("### Cabeças de Chave (Inserir exatamente 5 jogadores - TODOS HOMENS)")
 cabecas_input = st.text_area("Digite um nome por linha", height=120)
 
-st.markdown("### Demais Jogadores")
+st.markdown("### Demais Jogadores (incluindo mulheres)")
 jogadores_input = st.text_area("Digite um nome por linha", height=200)
 
 
-# 🔎 Função de detecção de gênero (CORRIGIDA)
+# 🔎 Detecção de gênero (somente para jogadores)
 def detectar_genero(nome):
     nome = nome.lower().strip()
 
-    # 🔥 Lista forte de nomes femininos
-    nomes_femininos = [
+    femininos = [
         "ana","maria","julia","juliana","fernanda","patricia","amanda",
         "carla","beatriz","camila","luciana","aline","daniela",
         "milena","mika","joyce","isabela","isabella","gabriela",
@@ -25,17 +24,15 @@ def detectar_genero(nome):
         "mariana","paula","priscila","talita","vanessa"
     ]
 
-    # 🔥 Verifica nome base (primeiro nome)
-    primeiro_nome = nome.split()[0]
+    primeiro = nome.split()[0]
 
-    if primeiro_nome in nomes_femininos:
+    if primeiro in femininos:
         return "F"
 
-    # fallback simples
     if nome.endswith("a"):
         return "F"
 
-    return "M"  # 🔥 NUNCA mais usa random
+    return "M"
 
 
 if st.button("🎲 Sortear Times"):
@@ -57,61 +54,60 @@ if st.button("🎲 Sortear Times"):
         st.error(f"Você precisa de exatamente {total_necessario} jogadores no total.")
         st.stop()
 
-    # 🚨 Validação duplicados
-    todos_nomes = cabecas + jogadores
-    if len(set(todos_nomes)) != len(todos_nomes):
-        st.error("Existem nomes duplicados. Corrija antes de sortear.")
+    # 🚨 Sem duplicados
+    todos = cabecas + jogadores
+    if len(set(todos)) != len(todos):
+        st.error("Existem nomes duplicados.")
         st.stop()
 
-    # 🔥 Mulheres APENAS dos jogadores
-    mulheres_jogadores = [n for n in jogadores if detectar_genero(n) == "F"]
+    # 🔥 Mulheres (somente dos jogadores)
+    mulheres = [j for j in jogadores if detectar_genero(j) == "F"]
 
-    # 🚨 Regra obrigatória
-    if len(mulheres_jogadores) < num_times:
+    if len(mulheres) < num_times:
         st.error(f"É necessário pelo menos {num_times} mulheres nos jogadores.")
         st.stop()
 
-    # 🔥 Criar times
+    # 🔥 Criar times (cabeças fixos - homens)
     times = {f"Time {i+1}": [cabecas[i]] for i in range(num_times)}
 
-    # 🔥 PASSO 1 — garantir 1 mulher por time
-    random.shuffle(mulheres_jogadores)
+    # 🔥 PASSO 1 — garantir exatamente 1 mulher por time
+    random.shuffle(mulheres)
+
+    mulheres_usadas = mulheres[:num_times]  # pega exatamente 5
+    mulheres_restantes = mulheres[num_times:]
 
     for i in range(num_times):
         time = f"Time {i+1}"
-        mulher = mulheres_jogadores.pop()
-        times[time].append(mulher)
+        times[time].append(mulheres_usadas[i])
 
-    # 🔥 PASSO 2 — preencher restante
-    usados = set()
-    for jogadores_time in times.values():
-        usados.update(jogadores_time)
+    # 🔥 PASSO 2 — restantes (SEM duplicar)
+    usados = set(cabecas + mulheres_usadas)
 
     restantes = [j for j in jogadores if j not in usados]
     random.shuffle(restantes)
 
-    i = 0
+    # 🔥 PASSO 3 — completar times
     for jogador in restantes:
-        while True:
-            time = f"Time {(i % num_times) + 1}"
-
+        for i in range(num_times):
+            time = f"Time {i+1}"
             if len(times[time]) < 4:
                 times[time].append(jogador)
-                i += 1
                 break
 
-            i += 1
-
-    # 🔒 VALIDAÇÃO FINAL
+    # 🔒 VALIDAÇÃO FINAL (garantia absoluta)
     for time, integrantes in times.items():
+        if len(integrantes) != 4:
+            st.error(f"{time} não tem 4 jogadores.")
+            st.stop()
+
         if not any(detectar_genero(j) == "F" for j in integrantes):
-            st.error(f"{time} ficou sem mulher. Revise os dados.")
+            st.error(f"{time} ficou sem mulher.")
             st.stop()
 
     st.success("Sorteio realizado com sucesso!")
 
-    # 📊 Exibir resultado
+    # 📊 Exibir
     for time, integrantes in times.items():
         st.markdown(f"# 🏆 {time} ({len(integrantes)}/4)")
-        for jogador in integrantes:
-            st.write(f"• {jogador}")
+        for j in integrantes:
+            st.write(f"• {j}")
