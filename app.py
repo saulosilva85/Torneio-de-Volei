@@ -9,7 +9,7 @@ st.markdown("## 🔹 Cabeças de Chave (5 homens obrigatórios)")
 cabecas_input = st.text_area("Digite 5 nomes (um por linha)")
 
 st.markdown("## 🔹 Mulheres (5 obrigatórias - 1 por time)")
-mulheres_input = st.text_area("Digite 5 nomes (um por linha)")
+mulheres_input = st.text_area("Digite 5 nomes femininos")
 
 st.markdown("## 🔹 Demais Jogadores")
 jogadores_input = st.text_area("Digite os outros jogadores")
