@@ -63,18 +63,20 @@ if st.button("🎲 Sortear Times"):
 
     # 🔥 PASSO 1 — Garantir uma mulher em cada time
     random.shuffle(mulheres_jogadores)
-    for i in range(num_times):
-        time = f"Time {i+1}"
-        mulher = mulheres_jogadores.pop()
-        times[time].append(mulher)
-
-    # 🔥 PASSO 2 — Preencher restantes
-    restantes = homens_jogadores + mulheres_jogadores
+    mulheres_selecionadas = mulheres_jogadores[:num_times]  # exatamente 5 mulheres
+    restantes = homens_jogadores + mulheres_jogadores[num_times:]  # sobra de homens + mulheres excedentes
     random.shuffle(restantes)
 
+    for i in range(num_times):
+        time = f"Time {i+1}"
+        times[time].append(mulheres_selecionadas[i])
+
+    # 🔥 PASSO 2 — Preencher restantes sem duplicar
+    idx = 0
     for time in times:
-        while len(times[time]) < 4 and restantes:
-            times[time].append(restantes.pop())
+        while len(times[time]) < 4 and idx < len(restantes):
+            times[time].append(restantes[idx])
+            idx += 1
 
     st.success("Sorteio realizado com sucesso!")
 
