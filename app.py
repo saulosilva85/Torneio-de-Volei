@@ -78,6 +78,14 @@ if st.button("🎲 Sortear Times"):
             times[time].append(restantes[idx])
             idx += 1
 
+    # 🚨 Garantia final: nenhum nome duplicado
+    usados = []
+    for integrantes in times.values():
+        usados.extend(integrantes)
+    if len(usados) != len(set(usados)):
+        st.error("Erro interno: houve duplicação de nomes. Verifique os dados inseridos.")
+        st.stop()
+
     st.success("Sorteio realizado com sucesso!")
 
     # 📊 Exibir resultado
