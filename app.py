@@ -3,7 +3,7 @@ import random
 
 st.set_page_config(page_title="Torneio de Vôlei", layout="centered")
 
-st.title("🏐 Torneio de Vôlei - Sorteio + Tabela")
+st.title("🏐 OPEN VILLAGE 18+ 🏐")
 
 # Inputs
 st.markdown("## 🔹 Cabeças de Chave (5 homens)")
