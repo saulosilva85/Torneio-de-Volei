@@ -3,7 +3,7 @@ import random
 
 st.set_page_config(page_title="Sorteio de Times - Vôlei", layout="centered")
 
-st.title("🏐 Sorteio de Times de Vôlei")
+st.title("🏐 OPEN VILLAGE 18+ 🏐")
 
 st.markdown("## 🔹 Cabeças de Chave (5 homens obrigatórios)")
 cabecas_input = st.text_area("Digite 5 nomes (um por linha)")
