@@ -49,42 +49,44 @@ if st.button("🎲 Sortear Times"):
         st.error("Existem nomes duplicados. Corrija antes de sortear.")
         st.stop()
 
-    # 🔥 Separar mulheres e homens
+    # 🔥 Separar mulheres corretamente (apenas entre os demais jogadores)
     mulheres_jogadores = [n for n in jogadores if detectar_genero(n) == "F"]
-    homens_jogadores = [n for n in jogadores if detectar_genero(n) == "M"]
+    total_mulheres = len(mulheres_jogadores)
 
     # 🚨 Regra obrigatória
-    if len(mulheres_jogadores) < num_times:
+    if total_mulheres < num_times:
         st.error("É necessário pelo menos 5 mulheres (1 por time).")
         st.stop()
 
     # 🔥 Criar times com cabeças fixos
     times = {f"Time {i+1}": [cabecas[i]] for i in range(num_times)}
 
-    # 🔥 PASSO 1 — Garantir uma mulher em cada time
-    random.shuffle(mulheres_jogadores)
-    mulheres_selecionadas = mulheres_jogadores[:num_times]  # exatamente 5 mulheres
-    restantes = homens_jogadores + mulheres_jogadores[num_times:]  # sobra de homens + mulheres excedentes
-    random.shuffle(restantes)
+    # 🔥 PASSO 1 — Garantir mulher por time
+    mulheres_disponiveis = mulheres_jogadores.copy()
+    random.shuffle(mulheres_disponiveis)
 
     for i in range(num_times):
         time = f"Time {i+1}"
-        times[time].append(mulheres_selecionadas[i])
+        mulher = mulheres_disponiveis.pop()
+        times[time].append(mulher)
 
-    # 🔥 PASSO 2 — Preencher restantes sem duplicar
-    idx = 0
-    for time in times:
-        while len(times[time]) < 4 and idx < len(restantes):
-            times[time].append(restantes[idx])
-            idx += 1
+    # 🔥 PASSO 2 — Preencher restantes
+    usados = set()
+    for jogadores_time in times.values():
+        usados.update(jogadores_time)
 
-    # 🚨 Garantia final: nenhum nome duplicado
-    usados = []
-    for integrantes in times.values():
-        usados.extend(integrantes)
-    if len(usados) != len(set(usados)):
-        st.error("Erro interno: houve duplicação de nomes. Verifique os dados inseridos.")
-        st.stop()
+    restantes = [j for j in jogadores if j not in usados]
+    random.shuffle(restantes)
+
+    i = 0
+    for jogador in restantes:
+        while True:
+            time = f"Time {(i % num_times) + 1}"
+            if len(times[time]) < 4:
+                times[time].append(jogador)
+                i += 1
+                break
+            i += 1
 
     st.success("Sorteio realizado com sucesso!")
 
