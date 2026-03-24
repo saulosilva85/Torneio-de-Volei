@@ -6,7 +6,7 @@ st.set_page_config(page_title="Sorteio de Times", layout="centered")
 st.title("🏐 Open Village 18+ 🏐")
 
 # ✅ Texto ajustado (sem obrigatoriedade de 5 homens)
-st.markdown("### Cabeças de Chave (qualquer jogador homem)")
+st.markdown("### Cabeças de Chave")
 cabecas_input = st.text_area("Digite um nome por linha", height=120)
 
 st.markdown("### Demais Jogadores")
