@@ -1,5 +1,6 @@
 import streamlit as st
 import random
+import unicodedata
 
 st.set_page_config(page_title="Sorteio de Times", layout="centered")
 
@@ -12,17 +13,34 @@ st.markdown("### Demais Jogadores")
 jogadores_input = st.text_area("Digite um nome por linha", height=200)
 
 
-# 🔎 Lista manual de mulheres (SOLUÇÃO CONFIÁVEL)
-# 👉 Aqui você pode adicionar nomes reais do seu grupo
+# 🔥 Base de nomes femininos comuns no Brasil
 nomes_femininos = {
-    "milena", "mika", "joyce", "rê", "isabela"
+    "ana","maria","joana","mariana","juliana","fernanda","patricia","camila","amanda",
+    "beatriz","bianca","carla","daniela","elaine","flavia","gabriela","isabela","isabella",
+    "juliane","karina","larissa","leticia","luana","luciana","marcela","milena","monica",
+    "natalia","paula","raquel","renata","roberta","simone","tatiane","vanessa","viviane",
+    "yasmim","bruna","aline","priscila","sheila","joyce","mika","rê"
 }
 
 
-def detectar_genero(nome):
+# 🔎 Normalizar nome (remove acento)
+def normalizar(nome):
     nome = nome.lower().strip()
-    if nome in nomes_femininos:
+    return ''.join(c for c in unicodedata.normalize('NFD', nome)
+                   if unicodedata.category(c) != 'Mn')
+
+
+def detectar_genero(nome):
+    nome_normalizado = normalizar(nome)
+
+    # 🔥 Regra principal: base de nomes femininos
+    if nome_normalizado in nomes_femininos:
         return "F"
+
+    # 🔥 Heurística secundária (melhorada)
+    if nome_normalizado.endswith("a"):
+        return "F"
+
     return "M"
 
 
@@ -31,7 +49,7 @@ if st.button("🎲 Sortear Times"):
     cabecas = [c.strip() for c in cabecas_input.split("\n") if c.strip()]
     jogadores = [j.strip() for j in jogadores_input.split("\n") if j.strip()]
 
-    # ✅ Validação: precisa ter pelo menos 1 cabeça
+    # ✅ Validação básica
     if len(cabecas) == 0:
         st.error("Adicione pelo menos 1 cabeça de chave.")
         st.stop()
@@ -47,8 +65,8 @@ if st.button("🎲 Sortear Times"):
         st.stop()
 
     # 🚨 Duplicados
-    todos_nomes = cabecas + jogadores
-    if len(set(todos_nomes)) != len(todos_nomes):
+    todos = cabecas + jogadores
+    if len(set(todos)) != len(todos):
         st.error("Existem nomes duplicados.")
         st.stop()
 
@@ -64,13 +82,12 @@ if st.button("🎲 Sortear Times"):
     # 🔥 Criar times
     times = {f"Time {i+1}": [cabecas[i]] for i in range(num_times)}
 
-    # 🔥 PASSO 1 — 1 mulher por time (GARANTIDO)
+    # 🔥 PASSO 1 — Garantir mulher por time
     random.shuffle(mulheres)
-
     for i in range(num_times):
         times[f"Time {i+1}"].append(mulheres[i])
 
-    # 🔥 PASSO 2 — Restantes (sem risco de erro)
+    # 🔥 PASSO 2 — Restantes
     restantes = mulheres[num_times:] + homens
     random.shuffle(restantes)
 
