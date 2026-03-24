@@ -49,44 +49,32 @@ if st.button("🎲 Sortear Times"):
         st.error("Existem nomes duplicados. Corrija antes de sortear.")
         st.stop()
 
-    # 🔥 Separar mulheres corretamente (apenas entre os demais jogadores)
+    # 🔥 Separar mulheres e homens
     mulheres_jogadores = [n for n in jogadores if detectar_genero(n) == "F"]
-    total_mulheres = len(mulheres_jogadores)
+    homens_jogadores = [n for n in jogadores if detectar_genero(n) == "M"]
 
     # 🚨 Regra obrigatória
-    if total_mulheres < num_times:
+    if len(mulheres_jogadores) < num_times:
         st.error("É necessário pelo menos 5 mulheres (1 por time).")
         st.stop()
 
     # 🔥 Criar times com cabeças fixos
     times = {f"Time {i+1}": [cabecas[i]] for i in range(num_times)}
 
-    # 🔥 PASSO 1 — Garantir mulher por time
-    mulheres_disponiveis = mulheres_jogadores.copy()
-    random.shuffle(mulheres_disponiveis)
-
+    # 🔥 PASSO 1 — Garantir uma mulher em cada time
+    random.shuffle(mulheres_jogadores)
     for i in range(num_times):
         time = f"Time {i+1}"
-        mulher = mulheres_disponiveis.pop()
+        mulher = mulheres_jogadores.pop()
         times[time].append(mulher)
 
     # 🔥 PASSO 2 — Preencher restantes
-    usados = set()
-    for jogadores_time in times.values():
-        usados.update(jogadores_time)
-
-    restantes = [j for j in jogadores if j not in usados]
+    restantes = homens_jogadores + mulheres_jogadores
     random.shuffle(restantes)
 
-    i = 0
-    for jogador in restantes:
-        while True:
-            time = f"Time {(i % num_times) + 1}"
-            if len(times[time]) < 4:
-                times[time].append(jogador)
-                i += 1
-                break
-            i += 1
+    for time in times:
+        while len(times[time]) < 4 and restantes:
+            times[time].append(restantes.pop())
 
     st.success("Sorteio realizado com sucesso!")
 
