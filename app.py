@@ -5,75 +5,68 @@ st.set_page_config(page_title="Sorteio de Times - Vôlei", layout="centered")
 
 st.title("🏐 Sorteio de Times - Torneio de Vôlei")
 
-# =========================
-# INPUTS
-# =========================
-
-st.markdown("### 👑 Cabeças de chave (5 homens)")
-cabecas_input = st.text_area("Digite um nome por linha", height=150)
-
-st.markdown("### 👩 Mulheres (5 jogadoras)")
-mulheres_input = st.text_area("Digite um nome por linha", height=150)
-
-st.markdown("### 👥 Demais jogadores (10 homens)")
-homens_input = st.text_area("Digite um nome por linha", height=150)
-
-# =========================
-# BOTÃO
-# =========================
+st.markdown("### 👥 Lista única de jogadores (20 nomes)")
+lista_input = st.text_area("Digite um nome por linha", height=300)
 
 if st.button("🎲 Sortear Times"):
 
     # =========================
-    # PROCESSAMENTO
+    # PROCESSAR LISTA
     # =========================
+    jogadores = [j.strip() for j in lista_input.split("\n") if j.strip()]
 
-    cabecas = [c.strip() for c in cabecas_input.split("\n") if c.strip()]
-    mulheres = [m.strip() for m in mulheres_input.split("\n") if m.strip()]
-    homens = [h.strip() for h in homens_input.split("\n") if h.strip()]
+    # Remover duplicados automaticamente
+    jogadores_unicos = list(set(jogadores))
 
-    # 🔒 REMOVER DUPLICADOS GLOBAIS
-    todos = cabecas + mulheres + homens
-    if len(todos) != len(set(todos)):
-        st.error("❌ Existem nomes duplicados entre as listas.")
+    if len(jogadores_unicos) != len(jogadores):
+        st.error("❌ Existem nomes duplicados na lista.")
+        st.stop()
+
+    if len(jogadores) != 20:
+        st.error("❌ A lista deve conter exatamente 20 jogadores.")
         st.stop()
 
     # =========================
-    # VALIDAÇÕES
+    # DEFINIR MULHERES (MANUAL)
     # =========================
+    # ⚠️ AJUSTE AQUI SE PRECISAR
+    mulheres_nomes = ["Milena", "Mika", "Joyce", "Rê", "Isabela"]
 
-    if len(cabecas) != 5:
-        st.error("❌ Devem existir exatamente 5 cabeças de chave.")
-        st.stop()
+    mulheres = [j for j in jogadores if j in mulheres_nomes]
+    homens = [j for j in jogadores if j not in mulheres_nomes]
 
     if len(mulheres) != 5:
-        st.error("❌ Devem existir exatamente 5 mulheres.")
+        st.error("❌ O sistema não encontrou exatamente 5 mulheres.")
         st.stop()
 
-    if len(homens) != 10:
-        st.error("❌ Devem existir exatamente 10 homens.")
+    if len(homens) != 15:
+        st.error("❌ O sistema não encontrou exatamente 15 homens.")
         st.stop()
 
     # =========================
     # SORTEIO
     # =========================
 
-    random.shuffle(cabecas)
-    random.shuffle(mulheres)
     random.shuffle(homens)
+
+    cabecas = homens[:5]      # 5 homens como cabeça de chave
+    restantes_homens = homens[5:]
+
+    random.shuffle(mulheres)
+    random.shuffle(restantes_homens)
 
     times = {}
 
     # Criar base dos times
     for i in range(5):
         times[f"Time {i+1}"] = [
-            cabecas[i],   # cabeça de chave
-            mulheres[i]   # 1 mulher por time
+            cabecas[i],     # cabeça de chave
+            mulheres[i]     # 1 mulher por time
         ]
 
     # Distribuir homens restantes
     index = 0
-    for jogador in homens:
+    for jogador in restantes_homens:
         time = f"Time {(index % 5) + 1}"
         times[time].append(jogador)
         index += 1
