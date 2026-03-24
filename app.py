@@ -1,74 +1,69 @@
-import streamlit as st
 import random
+import os
 
-st.set_page_config(page_title="Sorteio de Times - Vôlei", layout="centered")
+# ============================
+# CONFIGURAÇÃO DE JOGADORES
+# ============================
 
-st.title("🏐 Sorteio de Times - Torneio de Vôlei")
+# Cabeças de chave (homens)
+cabecas = ["João", "Carlos", "Marcos", "Roberto", "Alexandre"]
 
-st.markdown("### 👑 Cabeças de chave (5 homens)")
-cabecas_input = st.text_area("Digite um nome por linha", height=150)
+# Mulheres (não são cabeças de chave, mas devem ser distribuídas)
+mulheres = ["Maria", "Ana", "Juliana", "Fernanda", "Camila"]
 
-st.markdown("### 👥 Demais jogadores (15 jogadores, sendo 5 mulheres)")
-jogadores_input = st.text_area("Digite um nome por linha", height=200)
+# Demais homens
+homens_restantes = [
+    "Pedro", "Lucas", "Rafael", "Tiago", "Bruno",
+    "Felipe", "André", "Paulo", "Daniel", "Gustavo"
+]
 
-if st.button("🎲 Sortear Times"):
+# ============================
+# FUNÇÃO DE SORTEIO
+# ============================
 
-    cabecas = list(set([c.strip() for c in cabecas_input.split("\n") if c.strip()]))
-    jogadores = list(set([j.strip() for j in jogadores_input.split("\n") if j.strip()]))
+def sortear_times():
+    # Cria 5 times vazios
+    times = [[] for _ in range(5)]
 
-    # 🔒 Validações
-    if len(cabecas) != 5:
-        st.error("É necessário exatamente 5 cabeças de chave (homens).")
-        st.stop()
-
-    if len(jogadores) != 15:
-        st.error("É necessário exatamente 15 jogadores adicionais.")
-        st.stop()
-
-    # 🔍 Identificar mulheres (simples: nomes com indicador)
-    # Você pode adaptar para uma lista fixa se quiser mais precisão
-    mulheres = []
-    homens = []
-
-    for nome in jogadores:
-        if nome.lower().endswith("a"):  # heurística simples
-            mulheres.append(nome)
-        else:
-            homens.append(nome)
-
-    if len(mulheres) != 5:
-        st.error("Devem existir exatamente 5 mulheres na lista de jogadores.")
-        st.stop()
-
-    if len(homens) != 10:
-        st.error("Devem existir exatamente 10 homens restantes.")
-        st.stop()
-
-    # 🎲 Embaralhar tudo
-    random.shuffle(cabecas)
-    random.shuffle(mulheres)
-    random.shuffle(homens)
-
-    # 🏐 Criar times
-    times = {}
-
+    # Adiciona cabeças de chave (homens)
     for i in range(5):
-        times[f"Time {i+1}"] = [
-            cabecas[i],      # cabeça de chave
-            mulheres[i]      # 1 mulher por time
-        ]
+        times[i].append(cabecas[i])
 
-    # Distribuir homens restantes
-    index = 0
-    for jogador in homens:
-        time = f"Time {(index % 5) + 1}"
-        times[time].append(jogador)
-        index += 1
+    # Embaralha mulheres e distribui (uma por time)
+    mulheres_embaralhadas = random.sample(mulheres, len(mulheres))
+    for i in range(5):
+        times[i].append(mulheres_embaralhadas[i])
 
-    # 📊 Exibir resultado
-    st.success("✅ Sorteio realizado com sucesso!")
+    # Embaralha homens restantes e distribui
+    homens_embaralhados = random.sample(homens_restantes, len(homens_restantes))
+    idx = 0
+    for i in range(5):
+        while len(times[i]) < 5:
+            times[i].append(homens_embaralhados[idx])
+            idx += 1
 
-    for time, jogadores in times.items():
-        st.markdown(f"## 🏐 {time}")
-        for j in jogadores:
-            st.write(f"• {j}")
+    return times
+
+# ============================
+# INTERFACE SIMPLES
+# ============================
+
+def mostrar_times(times):
+    os.system("cls" if os.name == "nt" else "clear")
+    print("===== TORNEIO DE VÔLEI - SORTEIO =====\n")
+    for i, time in enumerate(times, start=1):
+        print(f"Time {i}: {', '.join(time)}")
+    print("\n======================================")
+
+def main():
+    while True:
+        times = sortear_times()
+        mostrar_times(times)
+
+        opcao = input("\nDeseja refazer o sorteio? (s/n): ").strip().lower()
+        if opcao != "s":
+            print("\nBoa sorte aos times!")
+            break
+
+if __name__ == "__main__":
+    main()
