@@ -12,7 +12,7 @@ st.markdown("### Demais Jogadores")
 jogadores_input = st.text_area("Digite um nome por linha", height=200)
 
 
-# 🔎 Função de detecção de gênero
+# 🔎 Função de detecção de gênero (apenas para os demais jogadores)
 def detectar_genero(nome):
     nome = nome.lower().strip()
     if nome.endswith("a"):
@@ -33,11 +33,6 @@ if st.button("🎲 Sortear Times"):
         st.error("Você deve inserir exatamente 5 cabeças de chave (homens).")
         st.stop()
 
-    # 🚨 Garantir que cabeças sejam homens
-    if any(detectar_genero(c) == "F" for c in cabecas):
-        st.error("Os cabeças de chave devem ser apenas homens.")
-        st.stop()
-
     num_times = 5
 
     # ✅ Validação total jogadores
@@ -54,7 +49,7 @@ if st.button("🎲 Sortear Times"):
         st.error("Existem nomes duplicados. Corrija antes de sortear.")
         st.stop()
 
-    # 🔥 Separar mulheres corretamente
+    # 🔥 Separar mulheres corretamente (apenas entre os demais jogadores)
     mulheres_jogadores = [n for n in jogadores if detectar_genero(n) == "F"]
     total_mulheres = len(mulheres_jogadores)
 
