@@ -12,16 +12,30 @@ st.markdown("### Demais Jogadores")
 jogadores_input = st.text_area("Digite um nome por linha", height=200)
 
 
-# 🔎 Função de detecção de gênero (somente para jogadores)
+# 🔎 Função de detecção de gênero (CORRIGIDA)
 def detectar_genero(nome):
     nome = nome.lower().strip()
 
+    # 🔥 Lista forte de nomes femininos
+    nomes_femininos = [
+        "ana","maria","julia","juliana","fernanda","patricia","amanda",
+        "carla","beatriz","camila","luciana","aline","daniela",
+        "milena","mika","joyce","isabela","isabella","gabriela",
+        "rafaela","leticia","renata","bianca","bruna","larissa",
+        "mariana","paula","priscila","talita","vanessa"
+    ]
+
+    # 🔥 Verifica nome base (primeiro nome)
+    primeiro_nome = nome.split()[0]
+
+    if primeiro_nome in nomes_femininos:
+        return "F"
+
+    # fallback simples
     if nome.endswith("a"):
         return "F"
-    elif nome.endswith(("o", "r", "l")):
-        return "M"
-    else:
-        return random.choice(["M", "F"])
+
+    return "M"  # 🔥 NUNCA mais usa random
 
 
 if st.button("🎲 Sortear Times"):
@@ -57,10 +71,10 @@ if st.button("🎲 Sortear Times"):
         st.error(f"É necessário pelo menos {num_times} mulheres nos jogadores.")
         st.stop()
 
-    # 🔥 Criar times com cabeças (todos homens)
+    # 🔥 Criar times
     times = {f"Time {i+1}": [cabecas[i]] for i in range(num_times)}
 
-    # 🔥 PASSO 1 — colocar 1 mulher em cada time (obrigatório)
+    # 🔥 PASSO 1 — garantir 1 mulher por time
     random.shuffle(mulheres_jogadores)
 
     for i in range(num_times):
@@ -88,7 +102,7 @@ if st.button("🎲 Sortear Times"):
 
             i += 1
 
-    # 🔒 VALIDAÇÃO FINAL (garantia absoluta)
+    # 🔒 VALIDAÇÃO FINAL
     for time, integrantes in times.items():
         if not any(detectar_genero(j) == "F" for j in integrantes):
             st.error(f"{time} ficou sem mulher. Revise os dados.")
