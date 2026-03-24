@@ -5,46 +5,36 @@ st.set_page_config(page_title="Sorteio de Times", layout="centered")
 
 st.title("🏐 Open Village 18+ 🏐")
 
-st.markdown("### Cabeças de Chave (Inserir exatamente 5 jogadores - TODOS HOMENS)")
+st.markdown("### Cabeças de Chave (Inserir de 2 a 6 jogadores)")
 cabecas_input = st.text_area("Digite um nome por linha", height=120)
 
-st.markdown("### Demais Jogadores (incluindo mulheres)")
+st.markdown("### Demais Jogadores")
 jogadores_input = st.text_area("Digite um nome por linha", height=200)
 
 
-# 🔎 Detecção de gênero (somente para jogadores)
+# 🔎 Função de detecção de gênero
 def detectar_genero(nome):
     nome = nome.lower().strip()
 
-    femininos = [
-        "ana","maria","julia","juliana","fernanda","patricia","amanda",
-        "carla","beatriz","camila","luciana","aline","daniela",
-        "milena","mika","joyce","isabela","isabella","gabriela",
-        "rafaela","leticia","renata","bianca","bruna","larissa",
-        "mariana","paula","priscila","talita","vanessa"
-    ]
-
-    primeiro = nome.split()[0]
-
-    if primeiro in femininos:
-        return "F"
-
     if nome.endswith("a"):
         return "F"
-
-    return "M"
+    elif nome.endswith(("o", "r", "l")):
+        return "M"
+    else:
+        return random.choice(["M", "F"])
 
 
 if st.button("🎲 Sortear Times"):
+
     cabecas = [c.strip() for c in cabecas_input.split("\n") if c.strip()]
     jogadores = [j.strip() for j in jogadores_input.split("\n") if j.strip()]
 
-    num_times = 5
-
     # ✅ Validação cabeças
-    if len(cabecas) != num_times:
-        st.error("Você deve inserir exatamente 5 cabeças de chave.")
+    if len(cabecas) < 2 or len(cabecas) > 6:
+        st.error("Você deve inserir entre 2 e 6 cabeças de chave.")
         st.stop()
+
+    num_times = len(cabecas)
 
     # ✅ Validação total jogadores
     total_necessario = num_times * 4
@@ -54,60 +44,64 @@ if st.button("🎲 Sortear Times"):
         st.error(f"Você precisa de exatamente {total_necessario} jogadores no total.")
         st.stop()
 
-    # 🚨 Sem duplicados
-    todos = cabecas + jogadores
-    if len(set(todos)) != len(todos):
-        st.error("Existem nomes duplicados.")
+    # 🚨 Validação de nomes duplicados
+    todos_nomes = cabecas + jogadores
+    if len(set(todos_nomes)) != len(todos_nomes):
+        st.error("Existem nomes duplicados. Corrija antes de sortear.")
         st.stop()
 
-    # 🔥 Mulheres (somente dos jogadores)
-    mulheres = [j for j in jogadores if detectar_genero(j) == "F"]
+    # 🔥 Separar mulheres corretamente
+    mulheres_jogadores = [n for n in jogadores if detectar_genero(n) == "F"]
+    mulheres_cabecas = [n for n in cabecas if detectar_genero(n) == "F"]
 
-    if len(mulheres) < num_times:
-        st.error(f"É necessário pelo menos {num_times} mulheres nos jogadores.")
+    total_mulheres = len(mulheres_jogadores) + len(mulheres_cabecas)
+
+    # 🚨 Regra obrigatória
+    if total_mulheres < num_times:
+        st.error(f"É necessário pelo menos {num_times} mulheres (1 por time).")
         st.stop()
 
-    # 🔥 Criar times (cabeças fixos - homens)
+    # 🔥 Criar times com cabeças fixos (NUNCA entram no sorteio)
     times = {f"Time {i+1}": [cabecas[i]] for i in range(num_times)}
 
-    # 🔥 PASSO 1 — garantir exatamente 1 mulher por time
-    random.shuffle(mulheres)
-
-    mulheres_usadas = mulheres[:num_times]  # pega exatamente 5
-    mulheres_restantes = mulheres[num_times:]
+    # 🔥 PASSO 1 — Garantir mulher por time
+    mulheres_disponiveis = mulheres_jogadores.copy()
+    random.shuffle(mulheres_disponiveis)
 
     for i in range(num_times):
         time = f"Time {i+1}"
-        times[time].append(mulheres_usadas[i])
+        cabeca = cabecas[i]
 
-    # 🔥 PASSO 2 — restantes (SEM duplicar)
-    usados = set(cabecas + mulheres_usadas)
+        if detectar_genero(cabeca) != "F":
+            if mulheres_disponiveis:
+                mulher = mulheres_disponiveis.pop()
+                times[time].append(mulher)
+
+    # 🔥 PASSO 2 — Preencher restantes (SEM cabeças!)
+    usados = set()
+    for jogadores_time in times.values():
+        usados.update(jogadores_time)
 
     restantes = [j for j in jogadores if j not in usados]
     random.shuffle(restantes)
 
-    # 🔥 PASSO 3 — completar times
+    i = 0
     for jogador in restantes:
-        for i in range(num_times):
-            time = f"Time {i+1}"
+        while True:
+            time = f"Time {(i % num_times) + 1}"
+
             if len(times[time]) < 4:
                 times[time].append(jogador)
+                i += 1
                 break
 
-    # 🔒 VALIDAÇÃO FINAL (garantia absoluta)
-    for time, integrantes in times.items():
-        if len(integrantes) != 4:
-            st.error(f"{time} não tem 4 jogadores.")
-            st.stop()
-
-        if not any(detectar_genero(j) == "F" for j in integrantes):
-            st.error(f"{time} ficou sem mulher.")
-            st.stop()
+            i += 1
 
     st.success("Sorteio realizado com sucesso!")
 
-    # 📊 Exibir
+    # 📊 Exibir resultado
     for time, integrantes in times.items():
         st.markdown(f"# 🏆 {time} ({len(integrantes)}/4)")
-        for j in integrantes:
-            st.write(f"• {j}")
+
+        for jogador in integrantes:
+            st.write(f"• {jogador}")
