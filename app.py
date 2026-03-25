@@ -19,23 +19,23 @@ st.markdown("## 🔹 Demais Jogadores")
 jogadores_input = st.text_area("Digite os demais jogadores")
 
 
+# ✅ FUNÇÃO CORRIGIDA (SEM FOLGA)
 def gerar_tabela(times):
     lista = times[:]
-    lista.append("FOLGA")
-
     n = len(lista)
     rodadas = []
 
     for rodada in range(n - 1):
         jogos = []
+
         for i in range(n // 2):
             t1 = lista[i]
             t2 = lista[n - 1 - i]
-
-            if t1 != "FOLGA" and t2 != "FOLGA":
-                jogos.append((t1, t2))
+            jogos.append((t1, t2))
 
         rodadas.append(jogos)
+
+        # Rotação correta mantendo o primeiro fixo
         lista = [lista[0]] + [lista[-1]] + lista[1:-1]
 
     return rodadas
@@ -120,7 +120,7 @@ if st.button("🎲 Sortear e Gerar Tabela"):
         for jogador in time:
             st.write(f"• {jogador}")
 
-    # Gerar tabela
+    # Gerar tabela CORRETA
     tabela = gerar_tabela(nomes_times)
 
     st.markdown("## 📅 Tabela de Jogos (Pontos Corridos)")
