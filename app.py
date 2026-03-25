@@ -6,7 +6,7 @@ import io
 
 st.set_page_config(page_title="Torneio de Vôlei", layout="centered")
 
-st.title("🏐 OPEN VILLAGE 30+ 🏐")
+st.title("🏐 OPEN VILLAGE 18+ 🏐")
 
 # Inputs
 st.markdown("## 🔹 Cabeças de Chave (6 homens)")
@@ -48,7 +48,7 @@ def gerar_pdf(times, nomes_times, tabela):
     elementos = []
 
     # Título
-    elementos.append(Paragraph("OPEN VILLAGE 30+ - TORNEIO DE VÔLEI", styles["Title"]))
+    elementos.append(Paragraph("OPEN VILLAGE 18+ - TORNEIO DE VÔLEI", styles["Title"]))
     elementos.append(Spacer(1, 12))
 
     # Times
