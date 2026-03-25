@@ -1,4 +1,4 @@
-# 🏐 Torneio de Vôlei
+# 🏐 Torneio de Vôlei 🏐
 
 Sistema web desenvolvido em Streamlit para criação automática de torneios de vôlei com:
 
