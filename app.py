@@ -6,14 +6,14 @@ import io
 
 st.set_page_config(page_title="Torneio de Vôlei", layout="centered")
 
-st.title("🏐 OPEN VILLAGE 18+ 🏐")
+st.title("🏐 OPEN VILLAGE 30+ 🏐")
 
 # Inputs
-st.markdown("## 🔹 Cabeças de Chave (5 homens)")
-cabecas_input = st.text_area("Digite 5 nomes")
+st.markdown("## 🔹 Cabeças de Chave (6 homens)")
+cabecas_input = st.text_area("Digite 6 nomes")
 
-st.markdown("## 🔹 Mulheres (5 obrigatórias)")
-mulheres_input = st.text_area("Digite 5 nomes femininos")
+st.markdown("## 🔹 Mulheres (6 obrigatórias)")
+mulheres_input = st.text_area("Digite 6 nomes femininos")
 
 st.markdown("## 🔹 Demais Jogadores")
 jogadores_input = st.text_area("Digite os demais jogadores")
@@ -48,7 +48,7 @@ def gerar_pdf(times, nomes_times, tabela):
     elementos = []
 
     # Título
-    elementos.append(Paragraph("OPEN VILLAGE 18+ - TORNEIO DE VÔLEI", styles["Title"]))
+    elementos.append(Paragraph("OPEN VILLAGE 30+ - TORNEIO DE VÔLEI", styles["Title"]))
     elementos.append(Spacer(1, 12))
 
     # Times
@@ -82,12 +82,12 @@ if st.button("🎲 Sortear e Gerar Tabela"):
     jogadores = [n.strip() for n in jogadores_input.split("\n") if n.strip()]
 
     # Validações
-    if len(cabecas) != 5:
-        st.error("Informe 5 cabeças de chave.")
+    if len(cabecas) != 6:
+        st.error("Informe 6 cabeças de chave.")
         st.stop()
 
-    if len(mulheres) != 5:
-        st.error("Informe 5 mulheres.")
+    if len(mulheres) != 6:
+        st.error("Informe 6 mulheres.")
         st.stop()
 
     todos = cabecas + mulheres + jogadores
@@ -98,19 +98,19 @@ if st.button("🎲 Sortear e Gerar Tabela"):
     random.shuffle(mulheres)
     random.shuffle(jogadores)
 
-    # Criar times
+    # Criar times (1 homem + 1 mulher)
     times = []
     nomes_times = []
 
-    for i in range(5):
+    for i in range(6):
         time = [cabecas[i], mulheres[i]]
         times.append(time)
         nomes_times.append(f"Time {i+1}")
 
-    # Distribuir jogadores
+    # Distribuir jogadores restantes
     i = 0
     while jogadores:
-        times[i % 5].append(jogadores.pop(0))
+        times[i % 6].append(jogadores.pop(0))
         i += 1
 
     # Exibir times
@@ -132,7 +132,7 @@ if st.button("🎲 Sortear e Gerar Tabela"):
     # Gerar PDF
     pdf = gerar_pdf(times, nomes_times, tabela)
 
-    # Botão de download
+    # Download
     st.download_button(
         label="📄 Baixar PDF",
         data=pdf,
