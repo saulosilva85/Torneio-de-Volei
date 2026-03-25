@@ -19,63 +19,80 @@ st.markdown("## 🔹 Demais Jogadores")
 jogadores_input = st.text_area("Digite os demais jogadores")
 
 
-# ✅ FUNÇÃO CORRIGIDA (SEM FOLGA)
-def gerar_tabela(times):
-    lista = times[:]
-    n = len(lista)
-    rodadas = []
-
-    for rodada in range(n - 1):
-        jogos = []
-
-        for i in range(n // 2):
-            t1 = lista[i]
-            t2 = lista[n - 1 - i]
-            jogos.append((t1, t2))
-
-        rodadas.append(jogos)
-
-        # Rotação correta mantendo o primeiro fixo
-        lista = [lista[0]] + [lista[-1]] + lista[1:-1]
-
-    return rodadas
+# -------------------------
+# GERAR JOGOS DO GRUPO (3 TIMES)
+# -------------------------
+def gerar_jogos_grupo(times):
+    return [
+        (times[0], times[1]),
+        (times[0], times[2]),
+        (times[1], times[2])
+    ]
 
 
-def gerar_pdf(times, nomes_times, tabela):
+# -------------------------
+# GERAR PDF
+# -------------------------
+def gerar_pdf(times, nomes_times, grupoA, grupoB, jogosA, jogosB):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer)
     styles = getSampleStyleSheet()
     elementos = []
 
-    # Título
     elementos.append(Paragraph("OPEN VILLAGE 18+ - TORNEIO DE VÔLEI", styles["Title"]))
     elementos.append(Spacer(1, 12))
 
     # Times
-    elementos.append(Paragraph("Times Sorteados", styles["Heading2"]))
-
+    elementos.append(Paragraph("Times", styles["Heading2"]))
     for i, time in enumerate(times):
         elementos.append(Paragraph(f"<b>{nomes_times[i]}</b>", styles["Heading3"]))
         for jogador in time:
             elementos.append(Paragraph(f"- {jogador}", styles["Normal"]))
         elementos.append(Spacer(1, 10))
 
-    # Jogos
-    elementos.append(Paragraph("Tabela de Jogos", styles["Heading2"]))
+    # Grupos
+    elementos.append(Paragraph("Grupos", styles["Heading2"]))
 
-    for i, rodada in enumerate(tabela):
-        elementos.append(Paragraph(f"<b>Rodada {i+1}</b>", styles["Heading3"]))
-        for jogo in rodada:
-            elementos.append(Paragraph(f"{jogo[0]} vs {jogo[1]}", styles["Normal"]))
-        elementos.append(Spacer(1, 10))
+    elementos.append(Paragraph("Grupo A", styles["Heading3"]))
+    for t in grupoA:
+        elementos.append(Paragraph(t, styles["Normal"]))
+
+    elementos.append(Spacer(1, 10))
+
+    elementos.append(Paragraph("Grupo B", styles["Heading3"]))
+    for t in grupoB:
+        elementos.append(Paragraph(t, styles["Normal"]))
+
+    elementos.append(Spacer(1, 10))
+
+    # Jogos
+    elementos.append(Paragraph("Jogos - Grupo A", styles["Heading2"]))
+    for j in jogosA:
+        elementos.append(Paragraph(f"{j[0]} vs {j[1]}", styles["Normal"]))
+
+    elementos.append(Spacer(1, 10))
+
+    elementos.append(Paragraph("Jogos - Grupo B", styles["Heading2"]))
+    for j in jogosB:
+        elementos.append(Paragraph(f"{j[0]} vs {j[1]}", styles["Normal"]))
+
+    elementos.append(Spacer(1, 20))
+
+    # Mata-mata
+    elementos.append(Paragraph("Mata-Mata", styles["Heading2"]))
+    elementos.append(Paragraph("Semi 1: 1º A vs 2º B", styles["Normal"]))
+    elementos.append(Paragraph("Semi 2: 1º B vs 2º A", styles["Normal"]))
+    elementos.append(Paragraph("Final: Vencedores das semis", styles["Normal"]))
 
     doc.build(elementos)
     buffer.seek(0)
-
     return buffer
 
 
-if st.button("🎲 Sortear e Gerar Tabela"):
+# -------------------------
+# BOTÃO
+# -------------------------
+if st.button("🎲 Sortear Torneio"):
 
     cabecas = [n.strip() for n in cabecas_input.split("\n") if n.strip()]
     mulheres = [n.strip() for n in mulheres_input.split("\n") if n.strip()]
@@ -98,7 +115,7 @@ if st.button("🎲 Sortear e Gerar Tabela"):
     random.shuffle(mulheres)
     random.shuffle(jogadores)
 
-    # Criar times (1 homem + 1 mulher)
+    # Criar times
     times = []
     nomes_times = []
 
@@ -107,7 +124,7 @@ if st.button("🎲 Sortear e Gerar Tabela"):
         times.append(time)
         nomes_times.append(f"Time {i+1}")
 
-    # Distribuir jogadores restantes
+    # Distribuir jogadores
     i = 0
     while jogadores:
         times[i % 6].append(jogadores.pop(0))
@@ -120,22 +137,52 @@ if st.button("🎲 Sortear e Gerar Tabela"):
         for jogador in time:
             st.write(f"• {jogador}")
 
-    # Gerar tabela CORRETA
-    tabela = gerar_tabela(nomes_times)
+    # -------------------------
+    # SORTEAR GRUPOS
+    # -------------------------
+    random.shuffle(nomes_times)
 
-    st.markdown("## 📅 Tabela de Jogos (Pontos Corridos)")
-    for i, rodada in enumerate(tabela):
-        st.markdown(f"### Rodada {i+1}")
-        for jogo in rodada:
-            st.write(f"{jogo[0]} 🆚 {jogo[1]}")
+    grupoA = nomes_times[:3]
+    grupoB = nomes_times[3:]
 
-    # Gerar PDF
-    pdf = gerar_pdf(times, nomes_times, tabela)
+    st.markdown("## 🔵 Grupo A")
+    for t in grupoA:
+        st.write(t)
 
-    # Download
+    st.markdown("## 🔴 Grupo B")
+    for t in grupoB:
+        st.write(t)
+
+    # -------------------------
+    # GERAR JOGOS DOS GRUPOS
+    # -------------------------
+    jogosA = gerar_jogos_grupo(grupoA)
+    jogosB = gerar_jogos_grupo(grupoB)
+
+    st.markdown("## 📅 Jogos - Grupo A")
+    for j in jogosA:
+        st.write(f"{j[0]} 🆚 {j[1]}")
+
+    st.markdown("## 📅 Jogos - Grupo B")
+    for j in jogosB:
+        st.write(f"{j[0]} 🆚 {j[1]}")
+
+    # -------------------------
+    # MATA-MATA (ESTRUTURA)
+    # -------------------------
+    st.markdown("## 🏆 Mata-Mata")
+    st.write("Semi 1: 1º A 🆚 2º B")
+    st.write("Semi 2: 1º B 🆚 2º A")
+    st.write("Final: vencedores das semifinais")
+
+    # -------------------------
+    # PDF
+    # -------------------------
+    pdf = gerar_pdf(times, nomes_times, grupoA, grupoB, jogosA, jogosB)
+
     st.download_button(
         label="📄 Baixar PDF",
         data=pdf,
-        file_name="tabela_torneio_volei.pdf",
+        file_name="torneio_volei_grupos.pdf",
         mime="application/pdf"
     )
