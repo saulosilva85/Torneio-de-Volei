@@ -8,17 +8,20 @@ st.set_page_config(page_title="Torneio de Vôlei", layout="centered")
 
 st.title("🏐 OPEN VILLAGE FLEX 🏐")
 
-# Inputs
+# Inputs (COM KEY ÚNICA)
 st.markdown("## 🔹 Cabeças de Chave (1 por time)")
-cabecas_input = st.text_area("Digite um nome por linha")
+cabecas_input = st.text_area("Digite um nome por linha", key="cabecas")
 
 st.markdown("## 🔹 Mulheres (mínimo = nº de times)")
-mulheres_input = st.text_area("Digite um nome por linha")
+mulheres_input = st.text_area("Digite um nome por linha", key="mulheres")
 
 st.markdown("## 🔹 Demais Jogadores")
-jogadores_input = st.text_area("Digite os demais jogadores")
+jogadores_input = st.text_area("Digite os demais jogadores", key="jogadores")
 
 
+# -------------------------
+# GERAR JOGOS DO GRUPO
+# -------------------------
 def gerar_jogos_grupo(times):
     jogos = []
     for i in range(len(times)):
@@ -27,18 +30,22 @@ def gerar_jogos_grupo(times):
     return jogos
 
 
+# -------------------------
+# DIVIDIR GRUPOS
+# -------------------------
 def dividir_grupos(times):
     random.shuffle(times)
     metade = math.ceil(len(times) / 2)
     return times[:metade], times[metade:]
 
 
+# -------------------------
+# GERAR EXCEL
+# -------------------------
 def gerar_excel(times, nomes_times, grupoA, grupoB, jogosA, jogosB):
     wb = Workbook()
 
-    # =================
     # ABA TIMES
-    # =================
     ws1 = wb.active
     ws1.title = "Times"
 
@@ -51,9 +58,7 @@ def gerar_excel(times, nomes_times, grupoA, grupoB, jogosA, jogosB):
             row += 1
         row += 1
 
-    # =================
     # ABA GRUPOS
-    # =================
     ws2 = wb.create_sheet("Grupos")
 
     ws2["A1"] = "Grupo A"
@@ -64,9 +69,7 @@ def gerar_excel(times, nomes_times, grupoA, grupoB, jogosA, jogosB):
     for i, t in enumerate(grupoB, start=2):
         ws2[f"C{i}"] = t
 
-    # =================
     # ABA JOGOS
-    # =================
     ws3 = wb.create_sheet("Jogos")
 
     ws3["A1"] = "Grupo A"
@@ -81,9 +84,7 @@ def gerar_excel(times, nomes_times, grupoA, grupoB, jogosA, jogosB):
         ws3.cell(row=i, column=6, value="vs")
         ws3.cell(row=i, column=7, value=j[1])
 
-    # =================
     # ABA MATA-MATA
-    # =================
     ws4 = wb.create_sheet("Mata-Mata")
 
     ws4["A1"] = "Semi 1"
@@ -105,9 +106,9 @@ def gerar_excel(times, nomes_times, grupoA, grupoB, jogosA, jogosB):
     return buffer
 
 
-# =========================
+# -------------------------
 # BOTÃO
-# =========================
+# -------------------------
 if st.button("🎲 Sortear Torneio"):
 
     cabecas = [n.strip() for n in cabecas_input.split("\n") if n.strip()]
@@ -139,7 +140,7 @@ if st.button("🎲 Sortear Torneio"):
         times.append(time)
         nomes_times.append(f"Time {i+1}")
 
-    # Distribuir jogadores restantes
+    # Distribuir jogadores
     i = 0
     while jogadores:
         times[i % len(times)].append(jogadores.pop(0))
@@ -152,7 +153,7 @@ if st.button("🎲 Sortear Torneio"):
         for jogador in time:
             st.write(f"• {jogador}")
 
-    # Grupos automáticos
+    # Grupos
     grupoA, grupoB = dividir_grupos(nomes_times.copy())
 
     st.markdown("## 🔵 Grupo A")
