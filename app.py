@@ -1,7 +1,6 @@
 import streamlit as st
 import random
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from openpyxl import Workbook
 import io
 
 st.set_page_config(page_title="Torneio de Vôlei", layout="centered")
@@ -20,7 +19,7 @@ jogadores_input = st.text_area("Digite os demais jogadores")
 
 
 # -------------------------
-# GERAR JOGOS DO GRUPO (3 TIMES)
+# GERAR JOGOS DO GRUPO
 # -------------------------
 def gerar_jogos_grupo(times):
     return [
@@ -31,61 +30,82 @@ def gerar_jogos_grupo(times):
 
 
 # -------------------------
-# GERAR PDF
+# GERAR EXCEL
 # -------------------------
-def gerar_pdf(times, nomes_times, grupoA, grupoB, jogosA, jogosB):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer)
-    styles = getSampleStyleSheet()
-    elementos = []
+def gerar_excel(times, nomes_times, grupoA, grupoB, jogosA, jogosB):
+    wb = Workbook()
 
-    elementos.append(Paragraph("OPEN VILLAGE 18+ - TORNEIO DE VÔLEI", styles["Title"]))
-    elementos.append(Spacer(1, 12))
+    # =========================
+    # ABA 1 - TIMES
+    # =========================
+    ws1 = wb.active
+    ws1.title = "Times"
 
-    # Times
-    elementos.append(Paragraph("Times", styles["Heading2"]))
+    row = 1
     for i, time in enumerate(times):
-        elementos.append(Paragraph(f"<b>{nomes_times[i]}</b>", styles["Heading3"]))
+        ws1.cell(row=row, column=1, value=nomes_times[i])
+        row += 1
         for jogador in time:
-            elementos.append(Paragraph(f"- {jogador}", styles["Normal"]))
-        elementos.append(Spacer(1, 10))
+            ws1.cell(row=row, column=2, value=jogador)
+            row += 1
+        row += 1
 
-    # Grupos
-    elementos.append(Paragraph("Grupos", styles["Heading2"]))
+    # =========================
+    # ABA 2 - GRUPOS
+    # =========================
+    ws2 = wb.create_sheet("Grupos")
 
-    elementos.append(Paragraph("Grupo A", styles["Heading3"]))
-    for t in grupoA:
-        elementos.append(Paragraph(t, styles["Normal"]))
+    ws2["A1"] = "Grupo A"
+    for i, t in enumerate(grupoA, start=2):
+        ws2[f"A{i}"] = t
 
-    elementos.append(Spacer(1, 10))
+    ws2["C1"] = "Grupo B"
+    for i, t in enumerate(grupoB, start=2):
+        ws2[f"C{i}"] = t
 
-    elementos.append(Paragraph("Grupo B", styles["Heading3"]))
-    for t in grupoB:
-        elementos.append(Paragraph(t, styles["Normal"]))
+    # =========================
+    # ABA 3 - JOGOS
+    # =========================
+    ws3 = wb.create_sheet("Jogos")
 
-    elementos.append(Spacer(1, 10))
-
-    # Jogos
-    elementos.append(Paragraph("Jogos - Grupo A", styles["Heading2"]))
+    ws3["A1"] = "Grupo A"
+    row = 2
     for j in jogosA:
-        elementos.append(Paragraph(f"{j[0]} vs {j[1]}", styles["Normal"]))
+        ws3.cell(row=row, column=1, value=j[0])
+        ws3.cell(row=row, column=2, value="vs")
+        ws3.cell(row=row, column=3, value=j[1])
+        row += 1
 
-    elementos.append(Spacer(1, 10))
-
-    elementos.append(Paragraph("Jogos - Grupo B", styles["Heading2"]))
+    ws3["E1"] = "Grupo B"
+    row = 2
     for j in jogosB:
-        elementos.append(Paragraph(f"{j[0]} vs {j[1]}", styles["Normal"]))
+        ws3.cell(row=row, column=5, value=j[0])
+        ws3.cell(row=row, column=6, value="vs")
+        ws3.cell(row=row, column=7, value=j[1])
+        row += 1
 
-    elementos.append(Spacer(1, 20))
+    # =========================
+    # ABA 4 - MATA-MATA
+    # =========================
+    ws4 = wb.create_sheet("Mata-Mata")
 
-    # Mata-mata
-    elementos.append(Paragraph("Mata-Mata", styles["Heading2"]))
-    elementos.append(Paragraph("Semi 1: 1º A vs 2º B", styles["Normal"]))
-    elementos.append(Paragraph("Semi 2: 1º B vs 2º A", styles["Normal"]))
-    elementos.append(Paragraph("Final: Vencedores das semis", styles["Normal"]))
+    ws4["A1"] = "Semi 1"
+    ws4["A2"] = "1º A"
+    ws4["A3"] = "2º B"
 
-    doc.build(elementos)
+    ws4["C1"] = "Semi 2"
+    ws4["C2"] = "1º B"
+    ws4["C3"] = "2º A"
+
+    ws4["E1"] = "Final"
+    ws4["E2"] = "Vencedor Semi 1"
+    ws4["E3"] = "Vencedor Semi 2"
+
+    # Salvar em memória
+    buffer = io.BytesIO()
+    wb.save(buffer)
     buffer.seek(0)
+
     return buffer
 
 
@@ -137,9 +157,7 @@ if st.button("🎲 Sortear Torneio"):
         for jogador in time:
             st.write(f"• {jogador}")
 
-    # -------------------------
-    # SORTEAR GRUPOS
-    # -------------------------
+    # Sortear grupos
     random.shuffle(nomes_times)
 
     grupoA = nomes_times[:3]
@@ -153,9 +171,7 @@ if st.button("🎲 Sortear Torneio"):
     for t in grupoB:
         st.write(t)
 
-    # -------------------------
-    # GERAR JOGOS DOS GRUPOS
-    # -------------------------
+    # Jogos
     jogosA = gerar_jogos_grupo(grupoA)
     jogosB = gerar_jogos_grupo(grupoB)
 
@@ -167,22 +183,18 @@ if st.button("🎲 Sortear Torneio"):
     for j in jogosB:
         st.write(f"{j[0]} 🆚 {j[1]}")
 
-    # -------------------------
-    # MATA-MATA (ESTRUTURA)
-    # -------------------------
+    # Mata-mata
     st.markdown("## 🏆 Mata-Mata")
     st.write("Semi 1: 1º A 🆚 2º B")
     st.write("Semi 2: 1º B 🆚 2º A")
-    st.write("Final: vencedores das semifinais")
+    st.write("Final")
 
-    # -------------------------
-    # PDF
-    # -------------------------
-    pdf = gerar_pdf(times, nomes_times, grupoA, grupoB, jogosA, jogosB)
+    # Excel
+    excel = gerar_excel(times, nomes_times, grupoA, grupoB, jogosA, jogosB)
 
     st.download_button(
-        label="📄 Baixar PDF",
-        data=pdf,
-        file_name="torneio_volei_grupos.pdf",
-        mime="application/pdf"
+        label="📊 Baixar Excel",
+        data=excel,
+        file_name="torneio_volei.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
