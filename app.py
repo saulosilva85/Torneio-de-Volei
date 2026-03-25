@@ -5,7 +5,7 @@ import io
 
 st.set_page_config(page_title="Torneio de Vôlei", layout="centered")
 
-st.title("🏐 OPEN VILLAGE 18+ 🏐")
+st.title("🏐 Torneio Vôlei 🏐")
 
 # Inputs
 st.markdown("## 🔹 Cabeças de Chave (6 homens)")
