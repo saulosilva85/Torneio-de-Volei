@@ -6,7 +6,7 @@ import math
 
 st.set_page_config(page_title="Torneio de Vôlei", layout="centered")
 
-st.title("🏐 OPEN VILLAGE FLEX 🏐")
+st.title("🏐 Torneio Vôlei 🏐")
 
 # Inputs (COM KEY ÚNICA)
 st.markdown("## 🔹 Cabeças de Chave (1 por time)")
