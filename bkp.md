@@ -2,31 +2,41 @@ import streamlit as st
 import random
 from openpyxl import Workbook
 import io
+import math
 
 st.set_page_config(page_title="Torneio de Vôlei", layout="centered")
 
 st.title("🏐 Torneio Vôlei 🏐")
 
-# Inputs
-st.markdown("## 🔹 Cabeças de Chave (6 homens)")
-cabecas_input = st.text_area("Digite 6 nomes")
+# Inputs (COM KEY ÚNICA)
+st.markdown("## 🔹 Cabeças de Chave (1 por time)")
+cabecas_input = st.text_area("Digite um nome por linha", key="cabecas")
 
-st.markdown("## 🔹 Mulheres (6 obrigatórias)")
-mulheres_input = st.text_area("Digite 6 nomes femininos")
+st.markdown("## 🔹 Mulheres (mínimo = nº de times)")
+mulheres_input = st.text_area("Digite um nome por linha", key="mulheres")
 
 st.markdown("## 🔹 Demais Jogadores")
-jogadores_input = st.text_area("Digite os demais jogadores")
+jogadores_input = st.text_area("Digite os demais jogadores", key="jogadores")
 
 
 # -------------------------
 # GERAR JOGOS DO GRUPO
 # -------------------------
 def gerar_jogos_grupo(times):
-    return [
-        (times[0], times[1]),
-        (times[0], times[2]),
-        (times[1], times[2])
-    ]
+    jogos = []
+    for i in range(len(times)):
+        for j in range(i + 1, len(times)):
+            jogos.append((times[i], times[j]))
+    return jogos
+
+
+# -------------------------
+# DIVIDIR GRUPOS
+# -------------------------
+def dividir_grupos(times):
+    random.shuffle(times)
+    metade = math.ceil(len(times) / 2)
+    return times[:metade], times[metade:]
 
 
 # -------------------------
@@ -35,9 +45,7 @@ def gerar_jogos_grupo(times):
 def gerar_excel(times, nomes_times, grupoA, grupoB, jogosA, jogosB):
     wb = Workbook()
 
-    # =========================
-    # ABA 1 - TIMES
-    # =========================
+    # ABA TIMES
     ws1 = wb.active
     ws1.title = "Times"
 
@@ -50,9 +58,7 @@ def gerar_excel(times, nomes_times, grupoA, grupoB, jogosA, jogosB):
             row += 1
         row += 1
 
-    # =========================
-    # ABA 2 - GRUPOS
-    # =========================
+    # ABA GRUPOS
     ws2 = wb.create_sheet("Grupos")
 
     ws2["A1"] = "Grupo A"
@@ -63,30 +69,22 @@ def gerar_excel(times, nomes_times, grupoA, grupoB, jogosA, jogosB):
     for i, t in enumerate(grupoB, start=2):
         ws2[f"C{i}"] = t
 
-    # =========================
-    # ABA 3 - JOGOS
-    # =========================
+    # ABA JOGOS
     ws3 = wb.create_sheet("Jogos")
 
     ws3["A1"] = "Grupo A"
-    row = 2
-    for j in jogosA:
-        ws3.cell(row=row, column=1, value=j[0])
-        ws3.cell(row=row, column=2, value="vs")
-        ws3.cell(row=row, column=3, value=j[1])
-        row += 1
+    for i, j in enumerate(jogosA, start=2):
+        ws3.cell(row=i, column=1, value=j[0])
+        ws3.cell(row=i, column=2, value="vs")
+        ws3.cell(row=i, column=3, value=j[1])
 
     ws3["E1"] = "Grupo B"
-    row = 2
-    for j in jogosB:
-        ws3.cell(row=row, column=5, value=j[0])
-        ws3.cell(row=row, column=6, value="vs")
-        ws3.cell(row=row, column=7, value=j[1])
-        row += 1
+    for i, j in enumerate(jogosB, start=2):
+        ws3.cell(row=i, column=5, value=j[0])
+        ws3.cell(row=i, column=6, value="vs")
+        ws3.cell(row=i, column=7, value=j[1])
 
-    # =========================
-    # ABA 4 - MATA-MATA
-    # =========================
+    # ABA MATA-MATA
     ws4 = wb.create_sheet("Mata-Mata")
 
     ws4["A1"] = "Semi 1"
@@ -101,7 +99,6 @@ def gerar_excel(times, nomes_times, grupoA, grupoB, jogosA, jogosB):
     ws4["E2"] = "Vencedor Semi 1"
     ws4["E3"] = "Vencedor Semi 2"
 
-    # Salvar em memória
     buffer = io.BytesIO()
     wb.save(buffer)
     buffer.seek(0)
@@ -118,13 +115,12 @@ if st.button("🎲 Sortear Torneio"):
     mulheres = [n.strip() for n in mulheres_input.split("\n") if n.strip()]
     jogadores = [n.strip() for n in jogadores_input.split("\n") if n.strip()]
 
-    # Validações
-    if len(cabecas) != 6:
-        st.error("Informe 6 cabeças de chave.")
+    if len(cabecas) < 2:
+        st.error("Informe pelo menos 2 cabeças de chave.")
         st.stop()
 
-    if len(mulheres) != 6:
-        st.error("Informe 6 mulheres.")
+    if len(mulheres) < len(cabecas):
+        st.error("Número de mulheres deve ser igual ou maior que o número de times.")
         st.stop()
 
     todos = cabecas + mulheres + jogadores
@@ -139,7 +135,7 @@ if st.button("🎲 Sortear Torneio"):
     times = []
     nomes_times = []
 
-    for i in range(6):
+    for i in range(len(cabecas)):
         time = [cabecas[i], mulheres[i]]
         times.append(time)
         nomes_times.append(f"Time {i+1}")
@@ -147,7 +143,7 @@ if st.button("🎲 Sortear Torneio"):
     # Distribuir jogadores
     i = 0
     while jogadores:
-        times[i % 6].append(jogadores.pop(0))
+        times[i % len(times)].append(jogadores.pop(0))
         i += 1
 
     # Exibir times
@@ -157,11 +153,8 @@ if st.button("🎲 Sortear Torneio"):
         for jogador in time:
             st.write(f"• {jogador}")
 
-    # Sortear grupos
-    random.shuffle(nomes_times)
-
-    grupoA = nomes_times[:3]
-    grupoB = nomes_times[3:]
+    # Grupos
+    grupoA, grupoB = dividir_grupos(nomes_times.copy())
 
     st.markdown("## 🔵 Grupo A")
     for t in grupoA:
@@ -185,8 +178,8 @@ if st.button("🎲 Sortear Torneio"):
 
     # Mata-mata
     st.markdown("## 🏆 Mata-Mata")
-    st.write("Semi 1: 1º A 🆚 2º B")
-    st.write("Semi 2: 1º B 🆚 2º A")
+    st.write("1º A 🆚 2º B")
+    st.write("1º B 🆚 2º A")
     st.write("Final")
 
     # Excel
@@ -195,6 +188,6 @@ if st.button("🎲 Sortear Torneio"):
     st.download_button(
         label="📊 Baixar Excel",
         data=excel,
-        file_name="torneio_volei.xlsx",
+        file_name="torneio_volei_flex.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
